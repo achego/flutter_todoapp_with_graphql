@@ -20,6 +20,8 @@ class _AddTodoState extends State<AddTodo> {
   bool _disableButton = true;
   bool _editing = false;
   late Todo _todo;
+  bool _loading = false;
+  bool _deleteLoading = false;
 
   final TextEditingController _title = TextEditingController();
 
@@ -64,8 +66,11 @@ class _AddTodoState extends State<AddTodo> {
     });
   }
 
-  void _saveTodo() {
+  void _saveTodo() async {
     String message = '';
+    setState(() {
+      _loading = true;
+    });
     bool noChange = false;
     if (_editing) {
       Todo newTodo = Todo(
@@ -83,9 +88,16 @@ class _AddTodoState extends State<AddTodo> {
         message = 'UPDATED   "${_title.text}"';
       }
     } else {
-      Provider.of<Todos>(context, listen: false)
-          .addTodo(_title.text, _description.text);
-      message = 'ADDED   "${_title.text}"';
+      try {
+        await Provider.of<Todos>(context, listen: false)
+            .addTodo(_title.text, _description.text);
+        message = 'ADDED   "${_title.text}"';
+      } catch (e) {
+        message = 'AN ERROR OCURED !!!';
+      }
+      setState(() {
+        _loading = false;
+      });
     }
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -100,8 +112,8 @@ class _AddTodoState extends State<AddTodo> {
     ));
   }
 
-  void _deleteTodo() {
-    showDialog(
+  void _deleteTodo() async {
+    await showDialog(
       context: context,
       builder: (_) => AlertDialog(
         actions: [
@@ -110,15 +122,38 @@ class _AddTodoState extends State<AddTodo> {
             child: const Text('NO'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              String message = '';
+              setState(() {
+                _deleteLoading = true;
+              });
               Navigator.pop(context);
-              Provider.of<Todos>(context, listen: false).deleteTodo(_todo.id);
+              _showLoadingSpinner();
+              try {
+                await Provider.of<Todos>(context, listen: false)
+                    .deleteTodo(_todo.id);
+                message = 'ITEM DELETED SUCCESFULY';
+              } catch (e) {
+                message = 'COULD NOT DELETE ITEM';
+              } finally {
+                setState(() {
+                  _deleteLoading = false;
+                });
+                Navigator.pop(context);
+              }
+
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('ITEM DELETE SUCCESSFULL'),
+                  content: Text(
+                    message,
+                    style: TextStyle(
+                        color: message == 'COULD NOT DELETE ITEM!!!'
+                            ? Colors.red
+                            : null),
+                  ),
                   action: SnackBarAction(
-                    label: 'UNDO',
+                    label: message == 'COULD NOT DELETE ITEM' ? "" : 'UNDO',
                     textColor: Colors.orange,
                     onPressed: () {},
                   ),
@@ -146,6 +181,32 @@ class _AddTodoState extends State<AddTodo> {
         content: const Text('Are you sure you want to delete this item?'),
       ),
     );
+  }
+
+  _showLoadingSpinner() {
+    showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+              title: const Text(
+                'Deleting Item !!',
+              ),
+              content: SizedBox(
+                height: 104,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: const [
+                    CircularProgressIndicator(),
+                    Text(
+                      'Please wait while we delete your item from the databse...',
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ));
   }
 
   @override
@@ -204,10 +265,25 @@ class _AddTodoState extends State<AddTodo> {
             const SizedBox(height: 30),
             CustomButton(
               enabled: !_disableButton,
-              onTap: () {
-                _saveTodo();
-              },
-              title: 'Save',
+              onTap: _loading
+                  ? () {}
+                  : () {
+                      _saveTodo();
+                    },
+              child: _loading
+                  ? const FittedBox(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Save',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
             ),
           ],
         ),
