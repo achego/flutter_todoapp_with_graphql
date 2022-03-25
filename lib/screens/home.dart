@@ -15,22 +15,38 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   bool _isInit = true;
   bool _isLoading = false;
+  Map<String, String> _error = {
+    'title': 'Todos is Empty',
+    'sub': 'Click the Floating Button to add a todo',
+  };
 
-  @override
-  void didChangeDependencies() async {
-    // TODO: implement didChangeDependencies
-    if (_isInit) {
+  Future<void> refresh() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      await Provider.of<Todos>(context, listen: false).getTodos();
+    } catch (e) {
       setState(() {
-        _isLoading = true;
-      });
-      Provider.of<Todos>(context, listen: false).getTodos().then((value) {
-        setState(() {
-          _isLoading = false;
-        });
+        _error = {
+          'title': 'An Error Occured',
+          'sub': 'check your internet connection then swipe down to refresh',
+        };
       });
     }
-    _isInit = false;
-    super.didChangeDependencies();
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    if (_isInit) {
+      refresh();
+      _isInit = false;
+      super.didChangeDependencies();
+    }
   }
 
   @override
@@ -38,7 +54,7 @@ class _HomeState extends State<Home> {
     final todos = Provider.of<Todos>(context).todos;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Todo List'),
+        title: const Text('Todo list'),
         actions: [
           IconButton(
             onPressed: () {
@@ -49,15 +65,18 @@ class _HomeState extends State<Home> {
         ],
       ),
       body: todos.isEmpty && !_isLoading
-          ? const Center(
-              child: ListTile(
-                title: Text(
-                  'Todos is Empty',
-                  textAlign: TextAlign.center,
-                ),
-                subtitle: Text(
-                  'Click the Floating Button to add a todo',
-                  textAlign: TextAlign.center,
+          ? RefreshIndicator(
+              onRefresh: () => refresh(),
+              child: Center(
+                child: ListTile(
+                  title: Text(
+                    _error['title']!,
+                    textAlign: TextAlign.center,
+                  ),
+                  subtitle: Text(
+                    _error['sub']!,
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             )
@@ -65,16 +84,22 @@ class _HomeState extends State<Home> {
               ? const Center(
                   child: CircularProgressIndicator.adaptive(),
                 )
-              : ListView.builder(
-                  itemBuilder: (_, i) => TodoItem(
-                        todoItem: todos[i],
-                      ),
-                  itemCount: todos.length),
+              : RefreshIndicator(
+                  onRefresh: () => refresh(),
+                  child: ListView.builder(
+                      itemBuilder: (_, i) => TodoItem(
+                            todoItem: todos[i],
+                          ),
+                      itemCount: todos.length),
+                ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).pushNamed(AddTodo.routeName);
-        },
+        onPressed: _isLoading
+            ? () {}
+            : () {
+                Navigator.of(context).pushNamed(AddTodo.routeName);
+              },
         child: const Icon(Icons.add),
+        backgroundColor: _isLoading ? Colors.grey : null,
       ),
     );
   }

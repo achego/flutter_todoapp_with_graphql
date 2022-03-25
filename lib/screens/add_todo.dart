@@ -224,68 +224,70 @@ class _AddTodoState extends State<AddTodo> {
             )
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 17,
-          horizontal: 12,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Title',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: 17,
+            horizontal: 12,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Title',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            CustomTextField(
-              onChanged: (_) {
-                validateSaveButton();
-              },
-              controller: _title,
-              hint: 'What do you want to do?',
-            ),
-            const SizedBox(height: 30),
-            const Text(
-              'Description',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
+              const SizedBox(height: 10),
+              CustomTextField(
+                onChanged: (_) {
+                  validateSaveButton();
+                },
+                controller: _title,
+                hint: 'What do you want to do?',
               ),
-            ),
-            const SizedBox(height: 10),
-            CustomTextField(
-              onChanged: (_) {
-                validateSaveButton();
-              },
-              controller: _description,
-              maxLines: 5,
-              hint: 'Write wahat ',
-            ),
-            const SizedBox(height: 30),
-            CustomButton(
-              enabled: !_disableButton,
-              onTap: _loading
-                  ? () {}
-                  : () {
-                      _saveTodo();
-                    },
-              child: _loading
-                  ? const FittedBox(
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
+              const SizedBox(height: 30),
+              const Text(
+                'Description',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 10),
+              CustomTextField(
+                onChanged: (_) {
+                  validateSaveButton();
+                },
+                controller: _description,
+                maxLines: 5,
+                hint: 'Write wahat ',
+              ),
+              const SizedBox(height: 30),
+              CustomButton(
+                enabled: !_disableButton,
+                onTap: _loading
+                    ? () {}
+                    : () {
+                        _saveTodo();
+                      },
+                child: _loading
+                    ? const FittedBox(
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Save',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    )
-                  : const Text(
-                      'Save',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

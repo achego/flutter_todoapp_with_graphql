@@ -30,6 +30,7 @@ class Todos with ChangeNotifier {
     );
     if (result.hasException) {
       print('GraphQl Exeptions  - ${result.exception}');
+      throw {result.exception};
       return;
     }
 
@@ -63,7 +64,7 @@ class Todos with ChangeNotifier {
       // throw {result.exception};
       print('GraphQl Exeptions  - ${result.exception}');
       notifyListeners();
-      // throw {result.exception};
+      throw {result.exception};
     }
 
     if (result.isNotLoading && !result.hasException) {
